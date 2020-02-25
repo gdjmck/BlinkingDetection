@@ -1,0 +1,4 @@
+
+model.ckpy | 80 epochs | Test on blink_crop_frames 95.7% acc | 
+batchsize=32 | lr=1e-3 | nh=64 | optimizer=adam
+

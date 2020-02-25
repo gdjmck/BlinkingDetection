@@ -1,0 +1,6 @@
+*.ipynb_checkpoints
+/__pycache__/
+/blink_crop/
+/blink_crop_frames/
+/fake_all*/
+*.ckpt
