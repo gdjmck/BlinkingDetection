@@ -4,3 +4,4 @@
 /blink_crop_frames/
 /fake_all*/
 *.ckpt
+*.ipynb
