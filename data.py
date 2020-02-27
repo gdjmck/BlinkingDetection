@@ -24,10 +24,23 @@ def get_transform(size=64, flip=0):
     ])
     return transform_train
 
+reverse_transform = transforms.Compose([
+        transforms.Normalize(mean=[0, 0, 0], std=[1/0.229, 1/0.224, 1/0.225]),
+        transforms.Normalize(mean=[-0.485, -0.456, -0.406], std=[1, 1, 1])
+    ])
+def reverse_norm(batch):
+    if len(batch.size()) == 4:
+        for i in range(batch.size(0)):
+            batch[i, ...] = reverse_transform(batch[i, ...])
+    else:
+        batch = reverse_transform(batch)
+    return batch
+
 class BlinkDataset(Dataset):
-    def __init__(self, root, seq_len=7, transform=get_transform()):
+    def __init__(self, root, seq_len=7, transform=get_transform(), img_format='jpg'):
         super().__init__()
         self.seq_len = seq_len
+        self.format = img_format
         '''
             root 
                 - vid1
@@ -56,7 +69,8 @@ class BlinkDataset(Dataset):
             video_size = len(self.label[label])
             #print(label)
             #print(self.label[label])
-            keys = list(self.label[label].keys())
+            # keys needs to be sorted by filename
+            keys = sorted(list(self.label[label].keys()))
             for i in range(0, video_size-self.seq_len):
                 self.index[idx] = os.path.join(label, keys[i])
                 idx += 1
@@ -85,13 +99,16 @@ class BlinkDataset(Dataset):
         starting_index = int(frame.rsplit('.', 1)[0])
         for i in range(self.seq_len):
             try:
-                seq_label += frame_labels['%04d.jpg'%(starting_index+i)]
+                seq_label += frame_labels['%04d.%s'%(starting_index+i, self.format)]
             except KeyError:
                 #print('%04d.pkl missing in %s'%(starting_index+i, vid))
                 pass
 
             frame_file = self.replace_with_index(starting_file, starting_index+i)
-            assert os.path.exists(frame_file)
+            try:
+                assert os.path.exists(frame_file)
+            except AssertionError:
+                print(frame_file, ' MISSING!')
             frame = Image.open(frame_file)
             frame = self.transform(frame)
             frame = frame.unsqueeze(0)
